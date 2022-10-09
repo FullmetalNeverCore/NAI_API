@@ -5,16 +5,16 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from config import email,password
-from excep import DefaultConfig
+from excep import DefaultConfig,TheEndOfNAI
 import time
 
 
 
 class SystemManipulation:
-    def __init__():
-        if email == "test@gmail.com" or password == "test":raise DefaultConfig("Add your email or password in config.py file.")
-
     def auth(driver,url : str):
+        if email == "test@gmail.com" or password == "test":
+            TheEndOfNAI.CALL_DESTRUCTOR(driver)
+            raise DefaultConfig("Add your email or password in config.py file.",driver)
         driver.get(url)
         print("Loggining in...")
         time.sleep(15) # page initial load
@@ -24,17 +24,38 @@ class SystemManipulation:
         print("Ready!/Searching for stories!")
 
     def find_stories(driver):
-        try:stories = [x.get_attribute("aria-label") for x in driver.find_elements_by_xpath("//*[@class='sc-7760eb68-22 cTmnLL sidebar-story-card']")]
+        try:stories = [x.get_attribute("aria-label") for x in driver.find_elements("xpath","//*[@class='sc-7760eb68-22 cTmnLL sidebar-story-card']")]
         except Exception as e: 
             print("The exeption occured,probably this story is not exist in your story list,try again.")
             return False 
         return stories
 
-    def button_interaction(driver,label,btnname : str):
-        try:WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, f"//*[@{label}='{btnname}']"))).click()
-        except Exception as e: 
-            return False 
-        return True
+    def button_interaction(driver,label,btnname : str,numofem=0):
+        if numofem == 0:
+            try:WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, f"//*[@{label}='{btnname}']"))).click()
+            except Exception as e: 
+                return False 
+            return True
+        else:
+            btn = [x for x in driver.find_elements("xpath","//*[@class='sc-7760eb68-22 cTmnLL sidebar-story-card']")]
+            print(len(btn))
+            try:
+                btn[numofem].click()
+                print("Clicked")
+            except Exception as e: 
+                print(e)
+                return False 
+            return True
+
+
+class ImaGenManipulation:
+    def enter_imagen(driver):
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, f"//*[@class='sc-48c34ae8-2 sc-48c34ae8-5 sc-9bc708a6-3 eVqxtQ lfyMed jSaLDb']"))).click()
+    def send_prompt(driver,inp):
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//*[@placeholder='Enter your prompt here.']"))).clear()
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//*[@placeholder='Enter your prompt here.']"))).send_keys(inp + Keys.RETURN)
+    def save_img(driver):
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, f"//*[@id='__next']/div[2]/div[1]/div/div[1]/div[2]/div[2]/div/div/div[2]/button[2]"))).click()
 
 
 class StoryManipulation:
@@ -49,4 +70,4 @@ class StoryManipulation:
 
     def get_output(driver):
         time.sleep(15) # Wait for answer to generate
-        return [x.text for x in driver.find_elements_by_xpath("//*[@class='aiText']")][-1]
+        return [x.text for x in driver.find_elements("xpath","//*[@class='aiText']")][-1]

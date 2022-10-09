@@ -3,7 +3,7 @@ from telnetlib import GA
 import time
 import psutil
 import subprocess
-import os
+import os,shutil
 from os import system,name 
 import sys
 from datetime import date
@@ -34,7 +34,8 @@ class NAI:
 
     def __init__(self) -> None:
         print(self.logo())
-        NAI_interaction().main_operation_loop()
+        if input('imagen? ') == 'y':NAI_interaction().img_operation_loop()
+        else:NAI_interaction().main_operation_loop()
 
     def logo(self):
         return '''
@@ -42,7 +43,7 @@ class NAI:
  | \ | | _____   _____| |  / \  |_ _|
  |  \| |/ _ \ \ / / _ \ | / _ \  | | 
  | |\  | (_) \ V /  __/ |/ ___ \ | | 
- |_| \_|\___/ \_/ \___|_/_/   \_\___|     ver1.0beta
+ |_| \_|\___/ \_/ \___|_/_/   \_\___|     ver1.13beta
                                             
         
         
@@ -78,13 +79,16 @@ class NAI:
 class NAI_interaction(NAI):
         def __init__(self):
             self.opts = Options()
+
             #self.display = Display(visible=0, size=(800, 600)) #for rpi usage 
             #self.display.start() #for rpi usage 
+            prefs = {"download.default_directory" : os.getcwd()}
             self.opts.add_argument("--disable-extensions")
             self.opts.add_argument("--proxy-server='direct://'")
             self.opts.add_argument("--proxy-bypass-list=*")
             self.opts.add_argument("--start-maximized")
-            self.opts.add_argument('--headless')
+            #self.opts.add_argument('--headless')
+            self.opts.add_experimental_option("prefs",prefs)
             self.opts.add_argument('--disable-gpu')
             self.opts.add_argument('--disable-dev-shm-usage')
             self.opts.add_argument('--no-sandbox')
@@ -96,6 +100,37 @@ class NAI_interaction(NAI):
 
         def main_discord_loop(self,input):
             pass 
+        
+        def tg_img_op_loop(self,prompt):
+            bindwithnai.SystemManipulation.auth(self.driver,self.url)
+            super().clear()
+            super().logo()
+            bindwithnai.SystemManipulation.button_interaction(self.driver,"aria-label","Close Modal")
+            bindwithnai.SystemManipulation.button_interaction(self.driver,"class","sc-48c34ae8-2 sc-48c34ae8-5 sc-9bc708a6-3 eVqxtQ lfyMed jSaLDb")
+            bindwithnai.ImaGenManipulation.send_prompt(self.driver,prompt)
+            bindwithnai.SystemManipulation.button_interaction(self.driver,"class","sc-434b3404-37 heUCxe")
+            time.sleep(10)
+            bindwithnai.ImaGenManipulation.save_img(self.driver)
+            self.driver.close()
+
+        def img_operation_loop(self):
+            bindwithnai.SystemManipulation.auth(self.driver,self.url)
+            super().clear()
+            super().logo()
+            bindwithnai.SystemManipulation.button_interaction(self.driver,"aria-label","Close Modal")
+            bindwithnai.SystemManipulation.button_interaction(self.driver,"class","sc-48c34ae8-2 sc-48c34ae8-5 sc-9bc708a6-3 eVqxtQ lfyMed jSaLDb")
+            while True:
+                bindwithnai.ImaGenManipulation.send_prompt(self.driver,input("Input your prompt here: "))
+                bindwithnai.SystemManipulation.button_interaction(self.driver,"class","sc-434b3404-37 heUCxe")
+                time.sleep(10)
+                bindwithnai.ImaGenManipulation.save_img(self.driver)
+                NAI_interaction().img_work()
+        
+        def img_work(self):
+            for x in os.listdir(f"./"):
+                if ".png" in x:
+                    shutil.copy2(f'./{x}',f"./png/{x}")
+                    os.remove(x)
 
         def main_operation_loop(self):
             bindwithnai.SystemManipulation.auth(self.driver,self.url)
